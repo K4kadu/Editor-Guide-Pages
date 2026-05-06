@@ -1,0 +1,67 @@
+name: Update ZIP from Google Doc
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # run every day at 3:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils zip pdftk
+
+      - name: Download latest PDF
+        run: |
+          curl -L "https://docs.google.com/document/d/1myd85jpTYQCtE1Mlu6fJEm3fJEIN_-7Q1TFcB1OcrT4/export?format=pdf" -o new.pdf
+
+      - name: Extract PDF outline
+        run: |
+          pdftk new.pdf dump_data > outline.txt
+
+      - name: Convert PDF to PNG
+        run: |
+          rm -f page-*.png
+          pdftoppm -png -r 150 new.pdf page
+
+          # Remove unwanted title page
+          rm -f page-01.png
+
+      - name: Prepare folder structure
+        run: |
+          rm -rf build
+          mkdir -p build/images
+          mv page-*.png build/images/
+          mv outline.txt build/
+
+      - name: Create ZIP
+        run: |
+          rm -f pages.zip
+          cd build
+          zip -r ../pages.zip .
+          cd ..
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add pages.zip
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "update pages.zip"
+          git push
