@@ -43,7 +43,7 @@ jobs:
           mkdir -p build/images
           for f in *.ppm; do
             name="${f%.ppm}"
-            magick "$f" -resize 1275x1650! "build/images/${name}.tga"
+            convert "$f" -resize 1275x1650! "build/images/${name}.tga"
           done
           mv outline.txt build/
 
