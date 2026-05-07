@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y poppler-utils zip pdftk
+          sudo apt-get install -y poppler-utils zip pdftk ffmpeg
 
       - name: Download latest PDF
         run: |
@@ -32,16 +32,19 @@ jobs:
       - name: Convert PDF to PNG
         run: |
           rm -f page-*.png
-          pdftoppm -png -r 150 new.pdf page
+          pdftoppm -bmp -r 400 new.pdf page
 
           # Remove unwanted title page
-          rm -f page-01.png
+          rm -f page-01.bmp
 
       - name: Prepare folder structure
         run: |
           rm -rf build
           mkdir -p build/images
-          mv page-*.png build/images/
+          for f in *.bmp; do
+            name="${f%.bmp}"
+            ffmpeg -loglevel error -y -i "$f" -vf scale=1275:1650 "build/images/${name}.tga"
+          done
           mv outline.txt build/
 
       - name: Create ZIP
