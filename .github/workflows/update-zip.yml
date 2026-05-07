@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y poppler-utils zip pdftk imagemagick
+          sudo apt-get install -y poppler-utils zip pdftk ffmpeg
 
       - name: Download latest PDF
         run: |
@@ -35,7 +35,7 @@ jobs:
           pdftoppm -r 400 new.pdf page
 
           # Remove unwanted title page
-          rm -f page-1.ppm
+          rm -f page-01.ppm
 
       - name: Prepare folder structure
         run: |
@@ -43,7 +43,7 @@ jobs:
           mkdir -p build/images
           for f in *.ppm; do
             name="${f%.ppm}"
-            convert "$f" -resize 1275x1650! "build/images/${name}.tga"
+            ffmpeg -loglevel error -y -i "$f" -vf scale=1275:1650 "build/images/${name}.tga"
           done
           mv outline.txt build/
 
