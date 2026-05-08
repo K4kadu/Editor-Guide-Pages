@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y poppler-utils zip pdftk ffmpeg
+          sudo apt-get install -y poppler-utils zip pdftk ffmpeg pngcrush
 
       - name: Download latest PDF
         run: |
@@ -37,15 +37,24 @@ jobs:
           # Remove unwanted title page
           rm -f page-01.ppm
 
+      - name: Scale PPM down and convert to PNG
+        run: |
+          for f in *.ppm; do
+            name="${f%.ppm}"
+            ffmpeg -loglevel error -y -i "$f" -vf scale=1275:1650 "${name}.png"
+          done
+
       - name: Prepare folder structure
         run: |
           rm -rf build
           mkdir -p build/images
-          for f in *.ppm; do
-            name="${f%.ppm}"
-            ffmpeg -loglevel error -y -i "$f" -vf scale=1275:1650 "build/images/${name}.tga"
-          done
           mv outline.txt build/
+
+      - name: Crush PNG and move to images folder
+        run: |
+          for f in *.png; do
+            pngcrush -q "$f" build/images/$f"
+          done
 
       - name: Create ZIP
         run: |
