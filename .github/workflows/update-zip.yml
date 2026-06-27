@@ -1,8 +1,8 @@
 name: Update ZIP from Google Doc
 
 on:
-  schedule:
-    - cron: "0 3 * * *"   # run every day at 3:00 UTC
+  #schedule:
+  #  - cron: "0 3 * * *"   # run every day at 3:00 UTC
   workflow_dispatch:
 
 permissions:
